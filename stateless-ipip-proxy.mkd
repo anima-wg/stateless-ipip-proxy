@@ -1,0 +1,151 @@
+---
+title: Stateless IPIP proxy for Bootstrapping Protocols
+abbrev: stateless-ipip-proxy
+docname: draft-richardson-anima-6tisch-stateless-ipip-proxy
+
+# stand_alone: true
+
+ipr: trust200902
+area: Internet
+wg: anima Working Group
+kw: Internet-Draft
+cat: std
+
+coding: us-ascii
+pi:    # can use array (if all yes) or hash here
+  toc: yes
+  sortrefs:   # defaults to yes
+  symrefs: yes
+
+author:
+
+
+- ins: M. Richardson
+  name: Michael Richardson
+  org: Sandelman Software Works
+  email: mcr+ietf@sandelman.ca
+
+normative:
+  RFC2119:
+  RFC7250:
+  RFC5652:
+  I-D.ietf-anima-bootstrapping-keyinfra:
+  I-D.ietf-6tisch-dtsecurity-zerotouch-join:
+  RFC8138:
+  I-D.ietf-ace-coap-est:
+
+informative:
+  RFC8366:
+  RFC6690:
+  RFC7030:
+  I-D.richardson-anima-state-for-joinrouter:
+  I-D.ietf-6tisch-minimal-security:
+
+--- abstract
+
+This document defines a mechanism for a Join Proxy used in a variety
+of related enrollment protocols to forward arbitrary traffic in a
+stateless fashion.
+
+This mechanism uses IPIP encapsulation which can be compressed by
+6lo mechanism.
+
+--- middle
+
+# Introduction
+
+Enrollment of new nodes into constrained networks with constrained nodes
+present unique challenges.
+
+There are bandwidth and code space issues to contend.
+Solutions such as {{I-D.ietf-anima-bootstrapping-keyinfra}}
+and {{I-D.ietf-6tisch-dtsecurity-zerotouch-join}} require that a new
+node (the "pledge") be helped by a Join Proxy.
+
+The Join Proxy needs to forward traffic from the Pledge to the Join
+Registrar/Coordinator (JRC), and then return responses from the JRC to the
+Pledge.  As detailed in {{I-D.richardson-anima-state-for-joinrouter}}
+there are many methods that can be used to forward the traffic.
+
+In each of the two join scenarios, the traffic between the Pledge
+and the Join Proxy is IPv6 Link-Local traffic.  The Pledge has no default
+gateway, nor any global routable address.  The Pledge believes
+a fiction that it has communicating with a JRC that is one link-local hop
+away.  The fiction is created so that the not-yet-trustworthy Pledge is not
+allocated any network resources, nor is it is permitted to communicate for
+any purpose other than enrollment.
+
+In all proxy mechanisms forwarding traffic to the JRC is relatively easy.
+The traffic to the JRC appears to come from the Join Proxy, and
+non-Link-Local addresses are used (ULA ACP addresses in ANIMA/BRSKI,
+and GUA addresses in 6tisch, which has no ACP).
+
+The problem is returning traffic from the JRC to the correct Pledge.
+In general, there may be more than one Pledge active at any time, so some
+state is necessary to find the correct Pledge for a given packet.
+
+{{I-D.ietf-6tisch-minimal-security} defines the "Stateless-Proxy CoAP Option"
+to store the state in the packet that is sent to the JRC.  This eliminates
+the need to store any per-Pledge state in the Join Proxy.  This method
+only works for CoAP protocols where the security is inside of CoAP
+(i.e. OSCORE), and fails for CoAPS (CoAP/DTLS), as the new option can
+not be inserted.
+
+{{I-D.ietf-anima-bootstrapping-keyinfra}} contains a mandatory to implement
+(on the JRC!) use of a TCP circuit proxy.  In it's canonical 1990-era
+application firewall origins in the ALG proxy, this requires a process
+running on the Join Proxy that connects two TCP sockets together.  The NAPT
+mechanisms as defined in {{RFC3022}} can be used for the same effect.  The
+origin address (the Pledge's Link-Local address), is mapped to the Join
+Proxy's ACP address.  A temporary origin port number is allocated.
+The destination address is statically changed from the Join Proxy's
+Link-Local address to the JRC's advertised address and port.  While this
+NAT66 method is cheaper than the historical ALG, it still has per-Pledge
+cost.  As the network on which device join may be open to any attacker,
+it is quite reasonable to expect an attacker to attempt to overwhelm the Join
+Proxy's state table.
+
+This document provides a third option, IPIP encapsulation in which UDP
+or TCP traffic (containing DTLS or TLS, or even raw CoAP) is forwarded
+using the IPIP header to encapsulate the original packet, and therefore
+maintaining the original headers.  This is essentially creation on a
+specific purpose Virtual (overlay) Network between the Join Proxy
+and the JRC.
+
+# Terminology          {#Terminology}
+
+The following terms are defined in {{RFC8366}}, and are used
+identically as in that document: artifact, imprint, domain, Join
+Registrar/Coordinator (JRC), Manufacturer Authorized Signing Authority
+(MASA), pledge, Trust of First Use (TOFU), and Voucher.
+
+# Requirements Language {#rfc2119}
+
+In this document, the key words "MUST", "MUST NOT", "REQUIRED",
+"SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY",
+and "OPTIONAL" are to be interpreted as described in BCP 14, RFC 2119
+{{RFC2119}} and indicate requirement levels for compliant STuPiD
+implementations.
+
+# Detailed Protocol Description
+
+TBD.
+
+# Design Considerations for Server Implementation
+
+TBD
+
+# Security Considerations
+
+TBD
+
+# IANA Considerations
+
+TBD.
+
+# Acknowledgements
+
+TBD.
+
+# Changelog
+
