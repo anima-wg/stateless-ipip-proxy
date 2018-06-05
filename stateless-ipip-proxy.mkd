@@ -1,7 +1,7 @@
 ---
 title: Stateless IPIP proxy for Bootstrapping Protocols
 abbrev: stateless-ipip-proxy
-docname: draft-richardson-anima-6tisch-stateless-ipip-proxy
+docname: draft-richardson-anima-6tisch-stateless-ipip-proxy-00
 
 # stand_alone: true
 
@@ -35,9 +35,10 @@ normative:
   I-D.ietf-ace-coap-est:
 
 informative:
-  RFC8366:
+  RFC3022:
   RFC6690:
   RFC7030:
+  RFC8366:
   I-D.richardson-anima-state-for-joinrouter:
   I-D.ietf-6tisch-minimal-security:
 
